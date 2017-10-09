@@ -28,18 +28,21 @@ int thread_freelist_low_watermark  = 32;
 void *
 thread_alloc(Allocator &a, ProxyAllocator &l)
 {
+  /*
   if (l.freelist) {
     void *v    = (void *)l.freelist;
     l.freelist = *(void **)l.freelist;
     --(l.allocated);
     return v;
   }
+  */
   return a.alloc_void();
 }
 
 void
 thread_freeup(Allocator &a, ProxyAllocator &l)
 {
+  /*
   void *head   = (void *)l.freelist;
   void *tail   = (void *)l.freelist;
   size_t count = 0;
@@ -55,6 +58,7 @@ thread_freeup(Allocator &a, ProxyAllocator &l)
   } else if (count > 0) {
     a.free_void_bulk(head, tail, count);
   }
+  */
 
   ink_assert(l.allocated >= thread_freelist_low_watermark);
 }
