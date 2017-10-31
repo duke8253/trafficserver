@@ -151,7 +151,11 @@ EThread::process_event(Event *e, int calling_code)
 }
 
 void
+#if TS_USE_EVENTLOOP_METRICS
 EThread::process_queue(Que(Event, link) * NegativeQueue, int *ev_count, int *nq_count)
+#else
+EThread::process_queue(Que(Event, link) * NegativeQueue)
+#endif /* TS_USE_EVENTLOOP_METRICS */
 {
   Event *e;
 
@@ -161,7 +165,11 @@ EThread::process_queue(Que(Event, link) * NegativeQueue, int *ev_count, int *nq_
   // execute all the available external events that have
   // already been dequeued
   while ((e = EventQueueExternal.dequeue_local())) {
+
+#if TS_USE_EVENTLOOP_METRICS
     ++(*ev_count);
+#endif /* TS_USE_EVENTLOOP_METRICS */
+
     if (e->cancelled) {
       free_event(e);
     } else if (!e->timeout_at) { // IMMEDIATE
@@ -182,7 +190,11 @@ EThread::process_queue(Que(Event, link) * NegativeQueue, int *ev_count, int *nq_
         NegativeQueue->insert(e, p);
       }
     }
+
+#if TS_USE_EVENTLOOP_METRICS
     ++(*nq_count);
+#endif /* TS_USE_EVENTLOOP_METRICS */
+
   }
 }
 
@@ -192,6 +204,8 @@ EThread::execute_regular()
   Event *e;
   Que(Event, link) NegativeQueue;
   ink_hrtime next_time = 0;
+
+#if TS_USE_EVENTLOOP_METRICS
   ink_hrtime delta     = 0;    // time spent in the event loop
   ink_hrtime loop_start_time;  // Time the loop started.
   ink_hrtime loop_finish_time; // Time at the end of the loop.
@@ -204,6 +218,7 @@ EThread::execute_regular()
 
   // A statically initialized instance we can use as a prototype for initializing other instances.
   static EventMetrics METRIC_INIT;
+#endif /* TS_USE_EVENTLOOP_METRICS */
 
   // give priority to immediate events
   for (;;) {
@@ -211,6 +226,7 @@ EThread::execute_regular()
       return;
     }
 
+#if TS_USE_EVENTLOOP_METRICS
     loop_start_time = Thread::get_hrtime_updated();
     nq_count        = 0; // count # of elements put on negative queue.
     ev_count        = 0; // # of events handled.
@@ -227,6 +243,9 @@ EThread::execute_regular()
     ++(current_metric->_count);
 
     process_queue(&NegativeQueue, &ev_count, &nq_count);
+#else
+    process_queue(&NegativeQueue);
+#endif /* TS_USE_EVENTLOOP_METRICS */
 
     bool done_one;
     do {
@@ -247,7 +266,12 @@ EThread::execute_regular()
 
     // execute any negative (poll) events
     if (NegativeQueue.head) {
+
+#if TS_USE_EVENTLOOP_METRICS
       process_queue(&NegativeQueue, &ev_count, &nq_count);
+#else
+      process_queue(&NegativeQueue);
+#endif /* TS_USE_EVENTLOOP_METRICS */
 
       // execute poll events
       while ((e = NegativeQueue.dequeue())) {
@@ -259,7 +283,11 @@ EThread::execute_regular()
     ink_hrtime sleep_time = next_time - Thread::get_hrtime_updated();
     if (sleep_time > 0) {
       sleep_time = std::min(sleep_time, HRTIME_MSECONDS(THREAD_MAX_HEARTBEAT_MSECONDS));
+
+#if TS_USE_EVENTLOOP_METRICS
       ++(current_metric->_wait);
+#endif /* TS_USE_EVENTLOOP_METRICS */
+
     } else {
       sleep_time = 0;
     }
@@ -270,6 +298,7 @@ EThread::execute_regular()
 
     tail_cb->waitForActivity(sleep_time);
 
+#if TS_USE_EVENTLOOP_METRICS
     // loop cleanup
     loop_finish_time = this->get_hrtime_updated();
     delta            = loop_finish_time - loop_start_time;
@@ -292,6 +321,8 @@ EThread::execute_regular()
       current_metric->_events._max = ev_count;
     }
     current_metric->_events._total += ev_count;
+#endif /* TS_USE_EVENTLOOP_METRICS */
+
   }
 }
 

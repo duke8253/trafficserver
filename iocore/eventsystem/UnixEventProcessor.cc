@@ -429,6 +429,7 @@ EventProcessor::start(int n_event_threads, size_t stacksize)
   // infrastructure being in place (e.g. the proxy allocators).
   thread_group[ET_CALL]._spawnQueue.push(make_event_for_scheduling(&Thread_Affinity_Initializer, EVENT_IMMEDIATE, nullptr));
 
+#if TS_USE_EVENTLOOP_METRICS
   // Get our statistics set up
   RecRawStatBlock *rsb = RecAllocateRawStatBlock(EThread::N_EVENT_STATS * EThread::N_EVENT_TIMESCALES);
   char name[256];
@@ -442,6 +443,7 @@ EventProcessor::start(int n_event_threads, size_t stacksize)
 
   // Name must be that of a stat, pick one at random since we do all of them in one pass/callback.
   RecRegisterRawStatSyncCb(name, EventMetricStatSync, rsb, 0);
+#endif /* TS_USE_EVENTLOOP_METRICS */
 
   this->spawn_event_threads(ET_CALL, n_event_threads, stacksize);
 

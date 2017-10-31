@@ -330,7 +330,13 @@ public:
 
   void execute() override;
   void execute_regular();
+
+#if TS_USE_EVENTLOOP_METRICS
   void process_queue(Que(Event, link) * NegativeQueue, int *ev_count, int *nq_count);
+#else
+  void process_queue(Que(Event, link) * NegativeQueue);
+#endif  /* TS_USE_EVENTLOOP_METRICS */
+
   void process_event(Event *e, int calling_code);
   void free_event(Event *e);
   LoopTailHandler *tail_cb = &DEFAULT_TAIL_HANDLER;

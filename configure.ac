@@ -1498,6 +1498,21 @@ AS_IF([test "x$enable_hwloc" = "xyes"], [
 AC_SUBST(use_hwloc)
 
 #
+# Add an option to enable event loop metrics
+#
+AC_MSG_CHECKING([whether to enable event loop metrics])
+AC_ARG_ENABLE([eventloop-metrics],
+  [AS_HELP_STRING([--enable-eventloop-metrics], [turn on event loop metrics])],
+  [],
+  [enable_eventloop_metrics=no]
+)
+AC_MSG_RESULT([$enable_eventloop_metrics])
+
+use_eventloop_metrics=0
+AS_IF([test "x$enable_eventloop_metrics" = "xyes"], [use_eventloop_metrics=1])
+AC_SUBST(use_eventloop_metrics)
+
+#
 # Check for Maxmind APIs / includes. TODO: Long term, it might make sense to support
 # GeoIP as a "helper" plugin, which other plugins can then use. Such a plugin could
 # then manage which libraries to use via explicit dlopen()'s.
