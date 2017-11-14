@@ -21,17 +21,21 @@
   limitations under the License.
  */
 
+#include <atomic>
+
 struct HttpProxyPort;
 
 /// Perform any pre-thread start initialization.
-void init_HttpProxyServer();
+void prep_HttpProxyServer();
 
 /** Initialize all HTTP proxy port data structures needed to accept connections.
  */
 void init_accept_HttpProxyServer(int n_accept_threads = 0);
 
+void init_HttpProxyServer(EThread *);
+
 /** Start the proxy server.
-    The port data should have been created by @c init_HttpProxyServer().
+    The port data should have been created by @c prep_HttpProxyServer().
 */
 void start_HttpProxyServer();
 
@@ -40,3 +44,6 @@ void stop_HttpProxyServer();
 void start_HttpProxyServerBackDoor(int port, int accept_threads = 0);
 
 NetProcessor::AcceptOptions make_net_accept_options(const HttpProxyPort *port, unsigned nthreads);
+
+extern int wait_for_et_net_ready;
+extern std::atomic<int> started_et_net_threads;
