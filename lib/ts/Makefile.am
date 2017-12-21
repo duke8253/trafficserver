@@ -29,7 +29,7 @@ TESTS_ENVIRONMENT = LSAN_OPTIONS=suppressions=suppression.txt
 
 TESTS = $(check_PROGRAMS)
 
-lib_LTLIBRARIES = libtsutil.la
+lib_LTLIBRARIES = libtsutil.la libjemalloc_shim.la
 
 AM_CPPFLAGS += -I$(abs_top_srcdir)/lib
 
@@ -200,6 +200,13 @@ libtsutil_la_SOURCES = \
   Version.cc \
   X509HostnameValidator.cc \
   X509HostnameValidator.h
+
+libjemalloc_shim_la_CPPFLAGS = \
+  $(AM_CPPFLAGS) \
+  -std=c++11 -fPIC -DPIC -O2
+
+libjemalloc_shim_la_SOURCES = \
+  jemalloc_shim.cc
 
 #test_UNUSED_SOURCES = \
 #  load_http_hdr.cc \
