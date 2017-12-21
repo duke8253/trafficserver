@@ -29,7 +29,7 @@ TESTS_ENVIRONMENT = LSAN_OPTIONS=suppressions=suppression.txt
 
 TESTS = $(check_PROGRAMS)
 
-lib_LTLIBRARIES = libtsutil.la
+lib_LTLIBRARIES = libtsutil.la libjemalloc_shim.la
 
 AM_CPPFLAGS += -I$(abs_top_srcdir)/lib
 
@@ -41,8 +41,7 @@ libtsutil_la_LIBADD = \
   @OPENSSL_LIBS@ \
   @LIBTCL@ \
   @LIBRESOLV@ \
-  @LIBCAP@ \
-  -lc
+  @LIBCAP@
 
 libtsutil_la_SOURCES = \
   Allocator.h \
@@ -155,6 +154,10 @@ libtsutil_la_SOURCES = \
   IpMapConf.h \
   IpMap.h \
   I_Version.h \
+  JemAllocator.h \
+  JemAllocator.cc \
+  jemallctl.cc \
+  jemallctl.h \
   Layout.cc \
   List.h \
   llqueue.cc \
@@ -197,6 +200,13 @@ libtsutil_la_SOURCES = \
   Version.cc \
   X509HostnameValidator.cc \
   X509HostnameValidator.h
+
+libjemalloc_shim_la_CPPFLAGS = \
+  $(AM_CPPFLAGS) \
+  -std=c++11 -fPIC -DPIC -O2
+
+libjemalloc_shim_la_SOURCES = \
+  jemalloc_shim.cc
 
 #test_UNUSED_SOURCES = \
 #  load_http_hdr.cc \
@@ -260,6 +270,7 @@ test_tslib_SOURCES = \
 	unit-tests/test_TextView.cc
 
 CompileParseRules_SOURCES = CompileParseRules.cc
+CompileParseRules_LDADD = ;true            # link command doesn't need $(LIBS)
 
 clean-local:
 	rm -f ParseRulesCType ParseRulesCTypeToLower ParseRulesCTypeToUpper
