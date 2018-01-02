@@ -7785,7 +7785,7 @@ HttpSM::redirect_request(const char *redirect_url, const int redirect_len)
   //(bug 2540703) Clear the previous response if we will attempt the redirect
   if (t_state.hdr_info.client_response.valid()) {
     // XXX - doing a destroy() for now, we can do a fileds_clear() if we have performance issue
-    t_state.hdr_info.client_response.destroy();
+    t_state.hdr_info.client_response.fields_clear();
   }
 
   int scheme                  = t_state.next_hop_scheme;
