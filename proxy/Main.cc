@@ -128,9 +128,11 @@ static void *mgmt_lifecycle_msg_callback(void *x, char *data, int len);
 static void init_ssl_ctx_callback(void *ctx, bool server);
 static void load_ssl_file_callback(const char *ssl_file, unsigned int options);
 
-static int num_of_net_threads = ink_number_of_processors();
+// We need these two to be accessible somewhere else now
+int num_of_net_threads = ink_number_of_processors();
+int num_accept_threads = 0;
+
 static int num_of_udp_threads = 0;
-static int num_accept_threads = 0;
 static int num_task_threads   = 0;
 
 static char *http_accept_port_descriptor;
@@ -701,7 +703,30 @@ CB_After_Cache_Init()
 
   if (1 == start) {
     Debug("http_listen", "Delayed listen enable, cache initialization finished");
-    start_HttpProxyServer();
+
+    // The problem here is we assume the et_net threads has started, but during
+    // some testing that is not always the case, some times start_HttpProxyServer
+    // will be called before the et_net threads finish initializing, which causes
+    // crashes due to uninitilized pointers being NULL. This happens only when
+    // we set the accept_threads to be 0 in the config, since this means the
+    // accept_threads is attached to the et_net threads. The first check here takes
+    // care of this special case of accept_threads being set to 0.
+    //
+    // The second check here is to make sure that ALL et_net threads has finished
+    // their initilization, so there are no uninitialied variables when we start
+    // the accept_threads. ink_atomic_cas() will try to change wait_for_et_net_ready
+    // from 0 to 1, if it succeeded it means that this is triggered before other
+    // places in this race condition, so we shouldn't start the accept_threads here.
+    // However if it did change wait_for_et_net_ready successfully, it means we
+    // can start the accept_threads here since other places in the race condition
+    // has finished their job.
+    if (num_accept_threads == 0) {
+      if (!ink_atomic_cas(&wait_for_et_net_ready, 0, 1)) {
+        start_HttpProxyServer();
+      }
+    } else {
+      start_HttpProxyServer(); // PORTS_READY_HOOK called from in here
+    }
   }
 
   time_t cache_ready_at = time(nullptr);
@@ -1718,7 +1743,7 @@ main(int /* argc ATS_UNUSED */, const char **argv)
   // We need to do this early so we can initialize the Machine
   // singleton, which depends on configuration values loaded in this.
   // We want to initialize Machine as early as possible because it
-  // has other dependencies. Hopefully not in init_HttpProxyServer().
+  // has other dependencies. Hopefully not in prep_HttpProxyServer().
   HttpConfig::startup();
   /* Set up the machine with the outbound address if that's set,
      or the inbound address if set, otherwise let it default.
@@ -1794,8 +1819,12 @@ main(int /* argc ATS_UNUSED */, const char **argv)
   ink_split_dns_init(makeModuleVersion(1, 0, PRIVATE_MODULE_HEADER));
 
   // Do the inits for NetProcessors that use ET_NET threads. MUST be before starting those threads.
+  naVecMutex             = new_ProxyMutex();
+  started_et_net_threads = 0;
   netProcessor.init();
-  init_HttpProxyServer();
+  prep_HttpProxyServer();
+
+  eventProcessor.schedule_spawn(&init_HttpProxyServer, ET_NET);
 
   // !! ET_NET threads start here !!
   // This means any spawn scheduling must be done before this point.
@@ -1934,7 +1963,15 @@ main(int /* argc ATS_UNUSED */, const char **argv)
       if (delay_p && ink_atomic_cas(&delay_listen_for_cache_p, 0, 1)) {
         Debug("http_listen", "Delaying listen, waiting for cache initialization");
       } else {
-        start_HttpProxyServer(); // PORTS_READY_HOOK called from in here
+        // Same idea as above, instead we change the value from 0 to 3,
+        // so it's easier to debug if we need to check the value of wait_for_et_net_ready.
+        if (num_accept_threads == 0) {
+          if (!ink_atomic_cas(&wait_for_et_net_ready, 0, 3)) {
+            start_HttpProxyServer();
+          }
+        } else {
+          start_HttpProxyServer(); // PORTS_READY_HOOK called from in here
+        }
       }
     }
     SNIConfig::cloneProtoSet();
@@ -1945,12 +1982,6 @@ main(int /* argc ATS_UNUSED */, const char **argv)
 
     // "Task" processor, possibly with its own set of task threads
     tasksProcessor.start(num_task_threads, stacksize);
-
-    int back_door_port = NO_FD;
-    REC_ReadConfigInteger(back_door_port, "proxy.config.process_manager.mgmt_port");
-    if (back_door_port != NO_FD) {
-      start_HttpProxyServerBackDoor(back_door_port, num_accept_threads > 0 ? 1 : 0); // One accept thread is enough
-    }
 
     if (netProcessor.socks_conf_stuff->accept_enabled) {
       start_SocksProxy(netProcessor.socks_conf_stuff->accept_port);
