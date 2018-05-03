@@ -89,10 +89,9 @@ static void malloc_bulkfree(InkFreeList *f, void *head, void *tail, size_t num_i
 
 static const ink_freelist_ops malloc_ops   = {malloc_new, malloc_free, malloc_bulkfree};
 static const ink_freelist_ops freelist_ops = {freelist_new, freelist_free, freelist_bulkfree};
-static const ink_freelist_ops *default_ops = &malloc_ops;
+static const ink_freelist_ops *freelist_freelist_ops = &malloc_ops;
 
-static ink_freelist_list *freelists                  = nullptr;
-static const ink_freelist_ops *freelist_freelist_ops = default_ops;
+static ink_freelist_list *freelists = nullptr;
 
 const InkFreeListOps *
 ink_freelist_malloc_ops()
@@ -104,16 +103,6 @@ const InkFreeListOps *
 ink_freelist_freelist_ops()
 {
   return &freelist_ops;
-}
-
-void
-ink_freelist_init_ops(const InkFreeListOps *ops)
-{
-  // This *MUST* only be called at startup before any freelists allocate anything. We will certainly crash if object
-  // allocated from the freelist are freed by malloc.
-  ink_release_assert(freelist_freelist_ops == default_ops);
-
-  freelist_freelist_ops = ops;
 }
 
 void
@@ -182,13 +171,7 @@ int fake_global_for_ink_queue = 0;
 void *
 ink_freelist_new(InkFreeList *f)
 {
-  void *ptr;
-
-  if (likely(ptr = freelist_freelist_ops->fl_new(f))) {
-    ink_atomic_increment((int *)&f->used, 1);
-  }
-
-  return ptr;
+  return freelist_freelist_ops->fl_new(f);
 }
 
 static void *
@@ -273,9 +256,7 @@ void
 ink_freelist_free(InkFreeList *f, void *item)
 {
   if (likely(item != nullptr)) {
-    ink_assert(f->used != 0);
     freelist_freelist_ops->fl_free(f, item);
-    ink_atomic_decrement((int *)&f->used, 1);
   }
 }
 
@@ -329,10 +310,7 @@ malloc_free(InkFreeList *f, void *item)
 void
 ink_freelist_free_bulk(InkFreeList *f, void *head, void *tail, size_t num_item)
 {
-  ink_assert(f->used >= num_item);
-
   freelist_freelist_ops->fl_bulkfree(f, head, tail, num_item);
-  ink_atomic_decrement((int *)&f->used, num_item);
 }
 
 static void

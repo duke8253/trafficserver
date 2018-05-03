@@ -158,7 +158,6 @@ typedef struct _InkFreeList InkFreeList;
 
 const InkFreeListOps *ink_freelist_malloc_ops();
 const InkFreeListOps *ink_freelist_freelist_ops();
-void ink_freelist_init_ops(const InkFreeListOps *);
 
 /*
  * alignment must be a power of 2
