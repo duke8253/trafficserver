@@ -89,7 +89,7 @@ static void malloc_bulkfree(InkFreeList *f, void *head, void *tail, size_t num_i
 
 static const ink_freelist_ops malloc_ops   = {malloc_new, malloc_free, malloc_bulkfree};
 static const ink_freelist_ops freelist_ops = {freelist_new, freelist_free, freelist_bulkfree};
-static const ink_freelist_ops *default_ops = &freelist_ops;
+static const ink_freelist_ops *default_ops = &malloc_ops;
 
 static ink_freelist_list *freelists                  = nullptr;
 static const ink_freelist_ops *freelist_freelist_ops = default_ops;
