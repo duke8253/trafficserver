@@ -143,14 +143,15 @@ struct UR_UpdateContinuation : public Continuation {
 bool
 reloadUrlRewrite()
 {
-  UrlRewrite *newTable;
+  UrlRewrite *newTable, *oldTable;
 
   Debug("url_rewrite", "remap.config updated, reloading...");
   newTable = new UrlRewrite();
   if (newTable->is_valid()) {
-    new_Deleter(rewrite_table, URL_REWRITE_TIMEOUT);
     static const char *msg = "remap.config done reloading!";
-    ink_atomic_swap(&rewrite_table, newTable);
+    oldTable               = ink_atomic_swap(&rewrite_table, newTable);
+    ink_assert(oldTable != nullptr);
+    new_Deleter(oldTable, 0);
     Debug("url_rewrite", "%s", msg);
     Note("%s", msg);
     return true;
