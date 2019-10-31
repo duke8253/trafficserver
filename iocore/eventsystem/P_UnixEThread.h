@@ -100,7 +100,13 @@ EThread::schedule(Event *e, bool fast_signal)
   // The continuation that gets scheduled later is not always the
   // client VC, it can be HttpCacheSM etc. so save the flags
   e->continuation->control_flags.set_flags(get_cont_flags().get_flags());
-  EventQueueExternal.enqueue(e, fast_signal);
+
+  if (e->ethread == this_ethread()) {
+    EventQueueExternal.enqueue_local(e);
+  } else {
+    EventQueueExternal.enqueue(e, fast_signal);
+  }
+
   return e;
 }
 
