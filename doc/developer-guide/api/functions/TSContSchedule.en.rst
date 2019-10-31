@@ -33,10 +33,12 @@ Synopsis
 Description
 ===========
 
-Schedules :arg:`contp` to run :arg:`delay` milliseconds in the future. This is approximate. The delay
-will be at least :arg:`delay` but possibly more. Resolutions finer than roughly 5 milliseconds will
-not be effective. :arg:`contp` is required to have a mutex, which is provided to
-:func:`TSContCreate`.
+Schedules :arg:`contp` to run :arg:`timeout` milliseconds in the future. This is approximate. The delay
+will be at least :arg:`timeout` but possibly more. Resolutions finer than roughly 5 milliseconds will
+not be effective. :arg:`contp` is required to have a mutex, which is provided to :func:`TSContCreate`.
+
+When scheduling with a 0 :arg:`timeout`, it is implied that the continuation should be handled
+immediately, i.e. the :doc:`eventloop.en` will not wait for the next loop to handle the it.
 
 The return value can be used to cancel the scheduled event via :func:`TSActionCancel`. This is
 effective until the continuation :arg:`contp` is being dispatched. However, if it is scheduled on

@@ -34,8 +34,8 @@ Description
 ===========
 
 Mostly the same as :func:`TSContSchedule`. Schedules :arg:`contp` on a random thread that belongs to :arg:`tp`.
-If thread type of the thread specified by thread affinity is the same as :arg:`tp`, the :arg:`contp` will
-be scheduled on the thread specified by thread affinity.
+If the type of the affinity thread is the same as :arg:`tp`, the :arg:`contp` will be scheduled on the affinity thread.
+Or if the type of the current thread is the same as :arg:`tp`, the :arg:`contp` will be scheduled on the current thread.
 
 The continuation is scheduled for a particular thread selected from a group of similar threads, as indicated by :arg:`tp`.
 
