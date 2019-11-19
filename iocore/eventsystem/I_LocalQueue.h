@@ -23,26 +23,55 @@
 
 #pragma once
 
-TS_INLINE Event *
-Event::init(Continuation *c, ink_hrtime atimeout_at, ink_hrtime aperiod, bool anext_loop)
+#include "tscore/ink_platform.h"
+#include "I_Event.h"
+
+class LocalQueue
 {
-  continuation = c;
-  timeout_at   = atimeout_at;
-  period       = aperiod;
-  immediate    = !period && !atimeout_at;
-  cancelled    = false;
-  next_loop    = anext_loop;
-  return this;
+public:
+  void enqueue(Event *e);
+  void swap_queue();
+  Event *dequeue();
+  bool is_next_empty();
+
+  Que(Event, link) * curr;
+  Que(Event, link) * next;
+
+  Que(Event, link) queue_1;
+  Que(Event, link) queue_2;
+
+  LocalQueue();
+};
+
+inline LocalQueue::LocalQueue()
+{
+  curr = &queue_1;
+  next = &queue_2;
 }
 
-TS_INLINE void
-Event::free()
+inline void
+LocalQueue::enqueue(Event *e)
 {
-  mutex = nullptr;
-  eventAllocator.free(this);
+  curr->enqueue(e);
 }
 
-TS_INLINE
-Event::Event() : in_the_prot_queue(false), in_the_priority_queue(false), immediate(false), globally_allocated(true), in_heap(false)
+inline void
+LocalQueue::swap_queue()
 {
+  Que(Event, link) * temp;
+  temp = curr;
+  curr = next;
+  next = temp;
+}
+
+inline Event *
+LocalQueue::dequeue()
+{
+  return curr->dequeue();
+}
+
+inline bool
+LocalQueue::is_next_empty()
+{
+  return next->empty();
 }

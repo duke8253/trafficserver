@@ -121,7 +121,11 @@ EventProcessor::schedule(Event *e, EventType etype)
   }
 
   if (curr_thread != nullptr && e->ethread == curr_thread) {
-    e->ethread->EventQueueExternal.enqueue_local(e);
+    if (e->timeout_at == 0 && e->next_loop) {
+      e->ethread->EventQueueLocal.enqueue(e);
+    } else {
+      e->ethread->EventQueueExternal.enqueue_local(e);
+    }
   } else {
     e->ethread->EventQueueExternal.enqueue(e);
   }
@@ -130,7 +134,7 @@ EventProcessor::schedule(Event *e, EventType etype)
 }
 
 TS_INLINE Event *
-EventProcessor::schedule_imm(Continuation *cont, EventType et, int callback_event, void *cookie)
+EventProcessor::schedule_imm(Continuation *cont, EventType et, bool next_loop, int callback_event, void *cookie)
 {
   Event *e = eventAllocator.alloc();
 
@@ -140,7 +144,7 @@ EventProcessor::schedule_imm(Continuation *cont, EventType et, int callback_even
 #endif
   e->callback_event = callback_event;
   e->cookie         = cookie;
-  return schedule(e->init(cont, 0, 0), et);
+  return schedule(e->init(cont, 0, 0, next_loop), et);
 }
 
 TS_INLINE Event *

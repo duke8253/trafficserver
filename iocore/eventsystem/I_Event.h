@@ -214,6 +214,8 @@ public:
   ink_hrtime timeout_at = 0;
   ink_hrtime period     = 0;
 
+  bool next_loop = true;
+
   /**
     This field can be set when an event is created. It is returned
     as part of the Event structure to the continuation when handleEvent
@@ -226,7 +228,7 @@ public:
 
   Event();
 
-  Event *init(Continuation *c, ink_hrtime atimeout_at = 0, ink_hrtime aperiod = 0);
+  Event *init(Continuation *c, ink_hrtime atimeout_at = 0, ink_hrtime aperiod = 0, bool anext_loop = true);
 
 #ifdef ENABLE_TIME_TRACE
   ink_hrtime start_time;

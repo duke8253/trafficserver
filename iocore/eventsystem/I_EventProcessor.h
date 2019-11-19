@@ -149,7 +149,7 @@ public:
       of this callback.
 
   */
-  Event *schedule_imm(Continuation *c, EventType event_type = ET_CALL, int callback_event = EVENT_IMMEDIATE,
+  Event *schedule_imm(Continuation *c, EventType event_type = ET_CALL, bool next_loop = true, int callback_event = EVENT_IMMEDIATE,
                       void *cookie = nullptr);
 
   /**

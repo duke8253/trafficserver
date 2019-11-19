@@ -295,7 +295,7 @@ NetHandler::update_nethandler_config(const char *str, RecDataT, RecData data, vo
            tp < limit; ++tp) {
         NetHandler *nh = get_NetHandler(*tp);
         if (nh) {
-          nh->thread->schedule_imm(nh, TS_EVENT_MGMT_UPDATE, idx);
+          nh->thread->schedule_imm(nh, false, TS_EVENT_MGMT_UPDATE, idx);
         }
       }
     }

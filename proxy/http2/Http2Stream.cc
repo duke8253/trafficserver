@@ -102,7 +102,7 @@ Http2Stream::main_event_handler(int event, void *edata)
         if (this->_read_vio_event) {
           this->_read_vio_event->cancel();
         }
-        this->_read_vio_event = this_ethread()->schedule_imm(read_vio.cont, event, &read_vio);
+        this->_read_vio_event = this_ethread()->schedule_imm(read_vio.cont, false, event, &read_vio);
       }
     } else if (_sm && write_vio.ntodo() > 0) {
       MUTEX_TRY_LOCK(lock, write_vio.mutex, this_ethread());
@@ -112,7 +112,7 @@ Http2Stream::main_event_handler(int event, void *edata)
         if (this->_write_vio_event) {
           this->_write_vio_event->cancel();
         }
-        this->_write_vio_event = this_ethread()->schedule_imm(write_vio.cont, event, &write_vio);
+        this->_write_vio_event = this_ethread()->schedule_imm(write_vio.cont, false, event, &write_vio);
       }
     }
     break;
@@ -128,7 +128,7 @@ Http2Stream::main_event_handler(int event, void *edata)
           if (this->_write_vio_event) {
             this->_write_vio_event->cancel();
           }
-          this->_write_vio_event = this_ethread()->schedule_imm(write_vio.cont, event, &write_vio);
+          this->_write_vio_event = this_ethread()->schedule_imm(write_vio.cont, false, event, &write_vio);
         }
       }
     } else {
@@ -147,7 +147,7 @@ Http2Stream::main_event_handler(int event, void *edata)
           if (this->_read_vio_event) {
             this->_read_vio_event->cancel();
           }
-          this->_read_vio_event = this_ethread()->schedule_imm(read_vio.cont, event, &read_vio);
+          this->_read_vio_event = this_ethread()->schedule_imm(read_vio.cont, false, event, &read_vio);
         }
       }
     } else {
@@ -503,7 +503,7 @@ Http2Stream::send_tracked_event(Event *event, int send_event, VIO *vio)
 
   if (event == nullptr) {
     REMEMBER(send_event, this->reentrancy_count);
-    event = this_ethread()->schedule_imm(this, send_event, vio);
+    event = this_ethread()->schedule_imm(this, false, send_event, vio);
   }
 
   return event;
@@ -974,7 +974,7 @@ Http2Stream::_switch_thread_if_not_on_right_thread(int event, void *edata)
     SCOPED_MUTEX_LOCK(stream_lock, this->mutex, this_ethread());
     if (cross_thread_event == nullptr) {
       // Send to the right thread
-      cross_thread_event = this->_thread->schedule_imm(this, event, edata);
+      cross_thread_event = this->_thread->schedule_imm(this, false, event, edata);
     }
     return false;
   }

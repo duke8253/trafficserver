@@ -89,7 +89,7 @@ ProxyTransaction::adjust_thread(Continuation *cont, int event, void *data)
   EThread *this_thread = this_ethread();
   if (vc && vc->thread != this_thread) {
     if (vc->thread->is_event_type(ET_NET)) {
-      return vc->thread->schedule_imm(cont, event, data);
+      return vc->thread->schedule_imm(cont, false, event, data);
     } else { // Not a net thread, take over this thread
       vc->thread = this_thread;
     }

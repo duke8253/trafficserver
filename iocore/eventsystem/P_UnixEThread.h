@@ -36,12 +36,12 @@
 const int DELAY_FOR_RETRY = HRTIME_MSECONDS(10);
 
 TS_INLINE Event *
-EThread::schedule_imm(Continuation *cont, int callback_event, void *cookie)
+EThread::schedule_imm(Continuation *cont, bool next_loop, int callback_event, void *cookie)
 {
   Event *e          = ::eventAllocator.alloc();
   e->callback_event = callback_event;
   e->cookie         = cookie;
-  return schedule(e->init(cont, 0, 0));
+  return schedule(e->init(cont, 0, 0, next_loop));
 }
 
 TS_INLINE Event *
@@ -93,7 +93,11 @@ EThread::schedule(Event *e)
   e->continuation->control_flags.set_flags(get_cont_flags().get_flags());
 
   if (e->ethread == this_ethread()) {
-    EventQueueExternal.enqueue_local(e);
+    if (e->timeout_at == 0 && e->next_loop) {
+      EventQueueLocal.enqueue(e);
+    } else {
+      EventQueueExternal.enqueue_local(e);
+    }
   } else {
     EventQueueExternal.enqueue(e);
   }
@@ -102,12 +106,12 @@ EThread::schedule(Event *e)
 }
 
 TS_INLINE Event *
-EThread::schedule_imm_local(Continuation *cont, int callback_event, void *cookie)
+EThread::schedule_imm_local(Continuation *cont, bool next_loop, int callback_event, void *cookie)
 {
   Event *e          = EVENT_ALLOC(eventAllocator, this);
   e->callback_event = callback_event;
   e->cookie         = cookie;
-  return schedule_local(e->init(cont, 0, 0));
+  return schedule_local(e->init(cont, 0, 0, next_loop));
 }
 
 TS_INLINE Event *
@@ -160,7 +164,13 @@ EThread::schedule_local(Event *e)
   // The continuation that gets scheduled later is not always the
   // client VC, it can be HttpCacheSM etc. so save the flags
   e->continuation->control_flags.set_flags(get_cont_flags().get_flags());
-  EventQueueExternal.enqueue_local(e);
+
+  if (e->timeout_at == 0 && e->next_loop) {
+    EventQueueLocal.enqueue(e);
+  } else {
+    EventQueueExternal.enqueue_local(e);
+  }
+
   return e;
 }
 

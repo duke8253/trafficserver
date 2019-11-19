@@ -151,6 +151,20 @@ EThread::process_queue(Que(Event, link) * NegativeQueue, int *ev_count, int *nq_
 {
   Event *e;
 
+  // Process all events that was scheduled with 0 timeout but wants to wait
+  // till the next event loop.
+  EventQueueLocal.swap_queue();
+  while ((e = EventQueueLocal.dequeue())) {
+    ++(*ev_count);
+    if (e->cancelled) {
+      free_event(e);
+    } else {
+      ink_assert(e->period == 0);
+      process_event(e, e->callback_event);
+    }
+    ++(*nq_count);
+  }
+
   // Move events from the external thread safe queues to the local queue.
   EventQueueExternal.dequeue_external();
 
@@ -188,6 +202,7 @@ EThread::execute_regular()
   Event *e;
   Que(Event, link) NegativeQueue;
   ink_hrtime next_time;
+  ink_hrtime sleep_time;
   ink_hrtime delta;            // time spent in the event loop
   ink_hrtime loop_start_time;  // Time the loop started.
   ink_hrtime loop_finish_time; // Time at the end of the loop.
@@ -251,13 +266,17 @@ EThread::execute_regular()
       }
     }
 
-    next_time             = EventQueue.earliest_timeout();
-    ink_hrtime sleep_time = next_time - Thread::get_hrtime_updated();
-    if (sleep_time > 0) {
-      sleep_time = std::min(sleep_time, HRTIME_MSECONDS(thread_max_heartbeat_mseconds));
-      ++(current_metric->_wait);
-    } else {
+    if (!EventQueueLocal.is_next_empty()) {
       sleep_time = 0;
+    } else {
+      next_time  = EventQueue.earliest_timeout();
+      sleep_time = next_time - Thread::get_hrtime_updated();
+      if (sleep_time > 0) {
+        sleep_time = std::min(sleep_time, HRTIME_MSECONDS(thread_max_heartbeat_mseconds));
+        ++(current_metric->_wait);
+      } else {
+        sleep_time = 0;
+      }
     }
 
     tail_cb->waitForActivity(sleep_time);

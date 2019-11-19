@@ -30,6 +30,7 @@
 #include "I_Thread.h"
 #include "I_PriorityEventQueue.h"
 #include "I_ProtectedQueue.h"
+#include "I_LocalQueue.h"
 
 // TODO: This would be much nicer to have "run-time" configurable (or something),
 // perhaps based on proxy.config.stat_api.max_stats_allowed or other configs. XXX
@@ -125,7 +126,7 @@ public:
       of this callback.
 
   */
-  Event *schedule_imm(Continuation *c, int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
+  Event *schedule_imm(Continuation *c, bool next_loop = true, int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
 
   /**
     Schedules the continuation on this EThread to receive an event
@@ -205,7 +206,7 @@ public:
       of this callback.
 
   */
-  Event *schedule_imm_local(Continuation *c, int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
+  Event *schedule_imm_local(Continuation *c, bool next_loop = true, int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
 
   /**
     Schedules the continuation on this EThread to receive an event
@@ -310,6 +311,7 @@ public:
   /** Private Data for AIO. */
   Que(Continuation, link) aio_ops;
 
+  LocalQueue EventQueueLocal;
   ProtectedQueue EventQueueExternal;
   PriorityEventQueue EventQueue;
 
