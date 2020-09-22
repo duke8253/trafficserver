@@ -364,6 +364,11 @@ query_responder(BIO *b, char *host, char *path, OCSP_REQUEST *req, int req_timeo
   end   = ink_hrtime_add(start, ink_hrtime_from_sec(req_timeout));
 
   ctx = OCSP_sendreq_new(b, path, nullptr, -1);
+
+  if (unlikely(cts == nullptr)) {
+    return nullptr;
+  }
+
   OCSP_REQ_CTX_add1_header(ctx, "Host", host);
   OCSP_REQ_CTX_set1_req(ctx, req);
 
