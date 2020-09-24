@@ -1924,12 +1924,23 @@ SSLAccept(SSL *ssl)
   return ssl_error;
 }
 
+extern std::map<sockaddr *, SSL_SESSION *> client_sess_cache;
+
 ssl_error_t
 SSLConnect(SSL *ssl)
 {
   ERR_clear_error();
   int ret = SSL_connect(ssl);
   if (ret > 0) {
+    if (SSL_session_reused(ssl)) {
+      Debug("ssl.client_session_cache", "Reused session");
+    } else {
+      Debug("ssl.client_session_cache", "New session");
+    }
+
+    SSLNetVConnection *netvc                    = SSLNetVCAccess(ssl);
+    client_sess_cache[netvc->get_remote_addr()] = SSL_get_session(ssl);
+
     return SSL_ERROR_NONE;
   }
   int ssl_error = SSL_get_error(ssl, ret);
