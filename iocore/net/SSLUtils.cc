@@ -1924,7 +1924,7 @@ SSLAccept(SSL *ssl)
   return ssl_error;
 }
 
-extern std::map<sockaddr *, SSL_SESSION *> client_sess_cache;
+extern std::map<const sockaddr *, SSL_SESSION *> client_sess_cache;
 
 ssl_error_t
 SSLConnect(SSL *ssl)
