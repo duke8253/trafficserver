@@ -154,7 +154,7 @@ private:
 // Private
 //
 
-std::map<unsigned char[16], SSL_SESSION *> client_sess_cache;
+std::map<std::array<unsigned char, 16>, SSL_SESSION *> client_sess_cache;
 
 static SSL *
 make_ssl_connection(SSL_CTX *ctx, SSLNetVConnection *netvc)
@@ -175,8 +175,8 @@ make_ssl_connection(SSL_CTX *ctx, SSLNetVConnection *netvc)
 
       SSL_set_bio(ssl, bio, bio);
 
-      unsigned char addr[16];
-      memcpy(addr, netvc->get_remote_addr(), 16);
+      std::array<unsigned char, 16> addr;
+      memcpy(addr.data(), netvc->get_remote_addr(), 16);
       SSL_SESSION *session = client_sess_cache[addr];
       if (session != nullptr) {
         SSL_set_session(netvc->ssl, session);

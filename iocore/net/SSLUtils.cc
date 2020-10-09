@@ -1924,7 +1924,7 @@ SSLAccept(SSL *ssl)
   return ssl_error;
 }
 
-extern std::map<unsigned char[16], SSL_SESSION *> client_sess_cache;
+extern std::map<std::array<unsigned char, 16>, SSL_SESSION *> client_sess_cache;
 
 ssl_error_t
 SSLConnect(SSL *ssl)
@@ -1939,10 +1939,10 @@ SSLConnect(SSL *ssl)
     }
 
     SSLNetVConnection *netvc = SSLNetVCAccess(ssl);
-    unsigned char addr[16];
-    memcpy(addr, netvc->get_remote_addr(), 16);
+    std::array<unsigned char, 16> addr;
+    memcpy(addr.data(), netvc->get_remote_addr(), 16);
     client_sess_cache[addr] = SSL_get_session(ssl);
-    Debug("ssl.client_session_cache", "Host: %.*s, Session: %p", 16, addr, client_sess_cache[addr]);
+    Debug("ssl.client_session_cache", "Host: %.*s, Session: %p", 16, addr.data(), client_sess_cache[addr]);
 
     return SSL_ERROR_NONE;
   }
