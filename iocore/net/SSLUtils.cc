@@ -1943,7 +1943,7 @@ SSLConnect(SSL *ssl)
     memcpy(addr.data(), netvc->get_remote_addr(), 16);
     client_sess_cache[addr] = SSL_get_session(ssl);
     std::string addr_str;
-    for (const auto& item : addr) {
+    for (const auto &item : addr) {
       char temp[3];
       sprintf(temp, "%02X", item);
       addr_str += temp[0];

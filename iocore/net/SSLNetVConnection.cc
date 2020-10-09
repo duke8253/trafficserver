@@ -179,7 +179,11 @@ make_ssl_connection(SSL_CTX *ctx, SSLNetVConnection *netvc)
       memcpy(addr.data(), netvc->get_remote_addr(), 16);
       SSL_SESSION *session = client_sess_cache[addr];
       if (session != nullptr) {
-        SSL_set_session(netvc->ssl, session);
+        if (SSL_set_session(netvc->ssl, session)) {
+          Debug("ssl.client_session_cache", "session set success: %p", session);
+        } else {
+          Debug("ssl.client_session_cache", "session set fail: %p", session);
+        }
       }
     } else {
       netvc->initialize_handshake_buffers();
