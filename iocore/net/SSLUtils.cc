@@ -1942,7 +1942,14 @@ SSLConnect(SSL *ssl)
     std::array<unsigned char, 16> addr;
     memcpy(addr.data(), netvc->get_remote_addr(), 16);
     client_sess_cache[addr] = SSL_get_session(ssl);
-    Debug("ssl.client_session_cache", "Host: %.*s, Session: %p", 16, addr.data(), client_sess_cache[addr]);
+    std::string addr_str;
+    for (const auto& item : addr) {
+      char temp[3];
+      sprintf(temp, "%02X", item);
+      addr_str += temp[0];
+      addr_str += temp[1];
+    }
+    Debug("ssl.client_session_cache", "Host: %s, Session: %p", addr_str.c_str(), client_sess_cache[addr]);
 
     return SSL_ERROR_NONE;
   }
