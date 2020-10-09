@@ -1940,6 +1940,8 @@ SSLConnect(SSL *ssl)
 
     SSLNetVConnection *netvc                    = SSLNetVCAccess(ssl);
     client_sess_cache[netvc->get_remote_addr()] = SSL_get_session(ssl);
+    Debug("ssl.client_session_cache", "Host: %p, Session: %p", netvc->get_remote_addr(),
+          client_sess_cache[netvc->get_remote_addr()]);
 
     return SSL_ERROR_NONE;
   }
