@@ -75,8 +75,6 @@ using namespace std::literals;
 
 ClassAllocator<SSLNetVConnection> sslNetVCAllocator("sslNetVCAllocator");
 
-std::map<const sockaddr *, SSL_SESSION *> client_sess_cache;
-
 namespace
 {
 /// Callback to get two locks.
@@ -156,6 +154,8 @@ private:
 // Private
 //
 
+std::map<sockaddr, SSL_SESSION *> client_sess_cache;
+
 static SSL *
 make_ssl_connection(SSL_CTX *ctx, SSLNetVConnection *netvc)
 {
@@ -175,7 +175,7 @@ make_ssl_connection(SSL_CTX *ctx, SSLNetVConnection *netvc)
 
       SSL_set_bio(ssl, bio, bio);
 
-      SSL_SESSION *session = client_sess_cache[netvc->get_remote_addr()];
+      SSL_SESSION *session = client_sess_cache[*(netvc->get_remote_addr())];
       if (session != nullptr) {
         SSL_set_session(netvc->ssl, session);
       }
