@@ -1217,7 +1217,8 @@ SSLMultiCertConfigLoader::init_server_ssl_ctx(CertLoadData const &data, const SS
     SSL_CTX_sess_set_remove_cb(ctx, ssl_rm_cached_session);
     SSL_CTX_sess_set_get_cb(ctx, ssl_get_cached_session);
 
-    SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_SERVER | SSL_SESS_CACHE_NO_INTERNAL | additional_cache_flags);
+    SSL_CTX_set_session_cache_mode(ctx, SSL_SESS_CACHE_CLIENT | SSL_SESS_CACHE_SERVER | SSL_SESS_CACHE_NO_INTERNAL |
+                                          additional_cache_flags);
     break;
   }
   }
