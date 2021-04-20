@@ -28,6 +28,8 @@
 #include "tscore/ink_platform.h"
 #include "P_SSLUtils.h"
 #include "ts/apidefs.h"
+#include <tscore/IntrusiveHashMap.h>
+
 #include <openssl/ssl.h>
 #include <mutex>
 #include <shared_mutex>
@@ -199,19 +201,64 @@ private:
   size_t nbuckets;
 };
 
+class OriginSession
+{
+public:
+  std::string _key;
+  SSL_SESSION *_sess;
+
+  OriginSession(std::string const &key, SSL_SESSION *sess) : _key(key), _sess(sess){};
+  ~OriginSession();
+
+  OriginSession *_next{nullptr};
+  OriginSession *_prev{nullptr};
+};
+
+class OriginSessionMapDescriptor
+{
+public:
+  using key_type   = std::string const;
+  using value_type = OriginSession;
+
+  static value_type *&
+  next_ptr(value_type *value)
+  {
+    return value->_next;
+  }
+  static value_type *&
+  prev_ptr(value_type *value)
+  {
+    return value->_prev;
+  }
+  static std::size_t
+  hash_of(key_type &key)
+  {
+    return std::hash<std::string>{}(key);
+  }
+  static key_type
+  key_of(value_type *value)
+  {
+    return value->_key;
+  }
+  static bool
+  equal(key_type &lhs, key_type &rhs)
+  {
+    return lhs == rhs;
+  }
+};
+
 class SSLOriginSessionCache
 {
 public:
   SSLOriginSessionCache();
   ~SSLOriginSessionCache();
 
-  void insert_session(std::string lookup_key, SSL_SESSION *sess);
-  void remove_session(std::string lookup_key);
-  SSL_SESSION *get_session(std::string lookup_key);
+  void insert_session(std::string const &lookup_key, SSL_SESSION *sess);
+  SSL_SESSION *get_session(std::string const &lookup_key);
 
 private:
   mutable std::shared_mutex mutex;
-  std::map<std::string, SSL_SESSION *> origin_sessions;
+  IntrusiveHashMap<OriginSessionMapDescriptor> origin_sessions;
 
   void remove_oldest_session(const std::unique_lock<std::shared_mutex> &lock);
 };
