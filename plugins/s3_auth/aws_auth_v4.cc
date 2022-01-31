@@ -176,39 +176,27 @@ canonicalEncode(const String &in, bool isObjectName)
  * @param inLen input character count
  * @return pointer to the trimmed string.
  */
-std::string
+String
 trimWhiteSpacesAndSqueezeInnerSpaces(const char *in, size_t inLen)
 {
   if (nullptr == in || inLen == 0) {
-    return std::string(in, inLen);
+    return "";
   }
 
-  const char *first = in;
-  while (size_t(first - in) < inLen && isspace(*first)) {
-    first++;
-  }
+  String in_str = trimWhiteSpaces(String(in, inLen));
+  String out_str;
+  char prev_c = '\0';
 
-  const char *last = in + inLen - 1;
-  while (last > in && isspace(*last)) {
-    last--;
-  }
-
-  std::stringstream result;
-  int consecutiveSpaces = 0;
-  while (first <= last) {
-    if (*first == ' ') {
-      consecutiveSpaces++;
-    } else {
-      if (consecutiveSpaces > 0) {
-        result << ' ';
-      }
-      consecutiveSpaces = 0;
-      result << *first;
+  for (auto &c : in_str) {
+    if (!isspace(c)) {
+      out_str += c;
+    } else if (isspace(c) && !isspace(prev_c)) {
+      out_str += ' ';
     }
-    first++;
+    prev_c = c;
   }
 
-  return result.str();
+  return out_str;
 }
 
 /**
