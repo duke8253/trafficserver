@@ -557,7 +557,7 @@ S3Config::parse_config(const std::string &config_fname)
       std::string key_val(pos2, pos1 - pos2 + 1);
       size_t eq_pos       = key_val.find_first_of("=");
       std::string key_str = trimWhiteSpaces(key_val.substr(0, eq_pos));
-      std::string val_str = trimWhiteSpaces(key_val.substr(eq_pos + 1, pos1 - eq_pos));
+      std::string val_str = trimWhiteSpaces(key_val.substr(eq_pos + 1, pos1 - pos2 - eq_pos));
 
       if (key_str == "secret_key") {
         set_secret(val_str.c_str());
