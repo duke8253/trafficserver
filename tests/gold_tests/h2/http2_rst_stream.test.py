@@ -1,5 +1,5 @@
 '''
-Abort HTTP/2 connection.
+Abort HTTP/2 connection using RST_STREAM frame.
 '''
 # @file
 #
@@ -8,8 +8,13 @@ Abort HTTP/2 connection.
 #
 
 Test.Summary = '''
-Abort HTTP/2 connection.
+Abort HTTP/2 connection using RST_STREAM frame.
 '''
+
+Test.SkipUnless(
+    Condition.HasOpenSSLVersion('1.1.1'),
+    Condition.HasProxyVerifierVersion('2.5.0')
+)
 
 #
 # Test 1: Client sends RST_STREAM after DATA frame
