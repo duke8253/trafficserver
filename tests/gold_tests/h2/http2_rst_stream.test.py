@@ -12,7 +12,7 @@ Abort HTTP/2 connection using RST_STREAM frame.
 '''
 
 Test.SkipUnless(
-    Condition.HasProxyVerifierVersion('2.5.0')
+    Condition.HasOpenSSLVersion('1.1.1')
 )
 
 #
