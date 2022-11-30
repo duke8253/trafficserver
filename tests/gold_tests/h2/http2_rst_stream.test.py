@@ -19,7 +19,7 @@ Test.SkipUnless(
 # Test 1: Client sends RST_STREAM after DATA frame
 #
 ts = Test.MakeATSProcess("ts1", enable_tls=True, enable_cache=False)
-replay_file = "replay/http2_rst_stream_client_after_data.replay.yaml"
+replay_file = "replay/http2_rst_stream_client_after_data.yaml"
 server = Test.MakeVerifierServerProcess("server1", replay_file)
 ts.addDefaultSSLFiles()
 ts.Disk.records_config.update({
