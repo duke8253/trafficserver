@@ -26,11 +26,11 @@ ts.Disk.records_config.update({
     'proxy.config.ssl.server.cert.path': f'{ts.Variables.SSLDir}',
     'proxy.config.ssl.server.private_key.path': f'{ts.Variables.SSLDir}',
     'proxy.config.ssl.client.verify.server.policy': 'PERMISSIVE',
-    'proxy.config.diags.debug.enabled': 3,
+    'proxy.config.diags.debug.enabled': 1,
     'proxy.config.diags.debug.tags': 'http',
 })
 ts.Disk.remap_config.AddLine(
-    'map / http://127.0.0.1:{0}'.format(server.Variables.http_port)
+    'map / https://127.0.0.1:{0}'.format(server.Variables.ssl_port)
 )
 ts.Disk.ssl_multicert_config.AddLine(
     'dest_ip=* ssl_cert_name=server.pem ssl_key_name=server.key'
