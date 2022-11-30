@@ -16,11 +16,11 @@ Test.SkipUnless(
 )
 
 #
-# Test 1: Client sends RST_STREAM after DATA frame
+# Client sends RST_STREAM after DATA frame
 #
-ts = Test.MakeATSProcess("ts1", enable_tls=True, enable_cache=False)
+ts = Test.MakeATSProcess("ts0", enable_tls=True, enable_cache=False)
 replay_file = "replay/http2_rst_stream_client_after_data.yaml"
-server = Test.MakeVerifierServerProcess("server1", replay_file)
+server = Test.MakeVerifierServerProcess("server0", replay_file)
 ts.addDefaultSSLFiles()
 ts.Disk.records_config.update({
     'proxy.config.ssl.server.cert.path': f'{ts.Variables.SSLDir}',
@@ -32,11 +32,14 @@ ts.Disk.records_config.update({
 ts.Disk.remap_config.AddLine(
     'map / http://127.0.0.1:{0}'.format(server.Variables.http_port)
 )
+ts.Disk.ssl_multicert_config.AddLine(
+    'dest_ip=* ssl_cert_name=server.pem ssl_key_name=server.key'
+)
 
 tr = Test.AddTestRun('Client sends RST_STREAM after DATA frame')
 tr.Processes.Default.StartBefore(server)
 tr.Processes.Default.StartBefore(ts)
-tr.AddVerifierClientProcess("client1", replay_file, http_ports=[ts.Variables.port])
+tr.AddVerifierClientProcess("client0", replay_file, http_ports=[ts.Variables.port])
 
 tr.Processes.Default.Streams.stdout += Testers.ContainsExpression(
     'Submitting RST_STREAM frame for key 1 after DATA frame with error code INTERNAL_ERROR.',
