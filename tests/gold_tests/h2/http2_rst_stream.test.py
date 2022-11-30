@@ -39,7 +39,7 @@ ts.Disk.ssl_multicert_config.AddLine(
 tr = Test.AddTestRun('Client sends RST_STREAM after DATA frame')
 tr.Processes.Default.StartBefore(server)
 tr.Processes.Default.StartBefore(ts)
-tr.AddVerifierClientProcess("client0", replay_file, http_ports=[ts.Variables.port])
+tr.AddVerifierClientProcess("client0", replay_file, http_ports=[ts.Variables.port], https_ports=[ts.Variables.ssl_port])
 
 tr.Processes.Default.Streams.stdout += Testers.ContainsExpression(
     'Submitting RST_STREAM frame for key 1 after DATA frame with error code INTERNAL_ERROR.',
