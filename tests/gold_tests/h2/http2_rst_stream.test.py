@@ -30,7 +30,7 @@ ts.Disk.records_config.update({
     'proxy.config.diags.debug.tags': 'http',
 })
 ts.Disk.remap_config.AddLine(
-    'map / https://127.0.0.1:{0}'.format(server.Variables.ssl_port)
+    'map / https://127.0.0.1:{0}'.format(server.Variables.https_port)
 )
 ts.Disk.ssl_multicert_config.AddLine(
     'dest_ip=* ssl_cert_name=server.pem ssl_key_name=server.key'
