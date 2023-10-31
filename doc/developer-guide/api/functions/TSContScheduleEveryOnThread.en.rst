@@ -18,8 +18,8 @@
 
 .. default-domain:: c
 
-TSContScheduleEveryOnPool
-*************************
+TSContScheduleEveryOnThread
+***************************
 
 Synopsis
 ========
@@ -28,13 +28,13 @@ Synopsis
 
     #include <ts/ts.h>
 
-.. function:: TSAction TSContScheduleEveryOnPool(TSCont contp, TSHRTime every, TSThreadPool tp)
+.. function:: TSAction TSContScheduleEveryOnThread(TSCont contp, TSHRTime every, TSEventThread ethread)
 
 Description
 ===========
 
-Schedules :arg:`contp` to run :arg:`every` milliseconds, on a random thread that belongs to
-:arg:`tp`. The :arg:`every` is an approximation, meaning it will be at least :arg:`every`
+Schedules :arg:`contp` to run :arg:`every` milliseconds, on the thread specified by
+:arg:`ethread`. The :arg:`every` is an approximation, meaning it will be at least :arg:`every`
 milliseconds but possibly more. Resolutions finer than roughly 5 milliseconds will not be
 effective. Note that :arg:`contp` is required to have a mutex, which is provided to
 :func:`TSContCreate`.
@@ -57,5 +57,5 @@ See Also
 :doc:`TSContScheduleOnPool.en`
 :doc:`TSContScheduleOnThread.en`
 :doc:`TSContScheduleOnEntirePool.en`
-:doc:`TSContScheduleEveryOnThread.en`
+:doc:`TSContScheduleEveryOnPool.en`
 :doc:`TSContScheduleEveryOnEntirePool.en`

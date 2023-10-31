@@ -4229,6 +4229,54 @@ tsapi::c::TSContScheduleOnThread(TSCont contp, TSHRTime timeout, TSEventThread e
   return action;
 }
 
+std::vector<tsapi::c::TSAction>
+tsapi::c::TSContScheduleOnEntirePool(TSCont contp, TSHRTime timeout, TSThreadPool tp)
+{
+  sdk_assert(sdk_sanity_check_iocore_structure(contp) == TS_SUCCESS);
+
+  /* ensure we are on a EThread */
+  sdk_assert(sdk_sanity_check_null_ptr((void *)this_ethread()) == TS_SUCCESS);
+
+  INKContInternal *i = reinterpret_cast<INKContInternal *>(contp);
+
+  // This is to allow the continuation to be scheduled on multiple threads
+  sdk_assert(i->mutex == nullptr);
+
+  EventType etype;
+
+  switch (tp) {
+  case TS_THREAD_POOL_NET:
+    etype = ET_NET;
+    break;
+  case TS_THREAD_POOL_TASK:
+    etype = ET_TASK;
+    break;
+  case TS_THREAD_POOL_DNS:
+    etype = ET_DNS;
+    break;
+  case TS_THREAD_POOL_UDP:
+    etype = ET_UDP;
+    break;
+  default:
+    etype = ET_TASK;
+    break;
+  }
+
+  if (ink_atomic_increment(static_cast<int *>(&i->m_event_count), eventProcessor.thread_group[etype]._count) < 0) {
+    ink_assert(!"not reached");
+  }
+
+  auto events =
+    eventProcessor.schedule_entire(i, HRTIME_MSECONDS(timeout), 0, etype, timeout == 0 ? EVENT_IMMEDIATE : EVENT_INTERVAL);
+
+  std::vector<TSAction> actions;
+  for (auto &event : events) {
+    /* This is a hack. Should be handled in ink_types */
+    actions.push_back((TSAction)((uintptr_t) reinterpret_cast<TSAction>(event) | 0x1));
+  }
+  return actions;
+}
+
 tsapi::c::TSAction
 tsapi::c::TSContScheduleEveryOnPool(TSCont contp, TSHRTime every, TSThreadPool tp)
 {
@@ -4254,6 +4302,12 @@ tsapi::c::TSContScheduleEveryOnPool(TSCont contp, TSHRTime every, TSThreadPool t
   case TS_THREAD_POOL_TASK:
     etype = ET_TASK;
     break;
+  case TS_THREAD_POOL_DNS:
+    etype = ET_DNS;
+    break;
+  case TS_THREAD_POOL_UDP:
+    etype = ET_UDP;
+    break;
   default:
     etype = ET_TASK;
     break;
@@ -4267,7 +4321,7 @@ tsapi::c::TSContScheduleEveryOnPool(TSCont contp, TSHRTime every, TSThreadPool t
 }
 
 tsapi::c::TSAction
-tsapi::c::TSContScheduleEveryOnThread(TSCont contp, TSHRTime every /* millisecs */, TSEventThread ethread)
+tsapi::c::TSContScheduleEveryOnThread(TSCont contp, TSHRTime every, TSEventThread ethread)
 {
   ink_release_assert(ethread != nullptr);
 
@@ -4291,6 +4345,53 @@ tsapi::c::TSContScheduleEveryOnThread(TSCont contp, TSHRTime every /* millisecs 
   /* This is a hack. Should be handled in ink_types */
   action = (TSAction)((uintptr_t)action | 0x1);
   return action;
+}
+
+std::vector<tsapi::c::TSAction>
+tsapi::c::TSContScheduleEveryOnEntirePool(TSCont contp, TSHRTime every, TSThreadPool tp)
+{
+  sdk_assert(sdk_sanity_check_iocore_structure(contp) == TS_SUCCESS);
+
+  /* ensure we are on a EThread */
+  sdk_assert(sdk_sanity_check_null_ptr((void *)this_ethread()) == TS_SUCCESS);
+
+  INKContInternal *i = reinterpret_cast<INKContInternal *>(contp);
+
+  // This is to allow the continuation to be scheduled on multiple threads
+  sdk_assert(i->mutex == nullptr);
+
+  EventType etype;
+
+  switch (tp) {
+  case TS_THREAD_POOL_NET:
+    etype = ET_NET;
+    break;
+  case TS_THREAD_POOL_TASK:
+    etype = ET_TASK;
+    break;
+  case TS_THREAD_POOL_DNS:
+    etype = ET_DNS;
+    break;
+  case TS_THREAD_POOL_UDP:
+    etype = ET_UDP;
+    break;
+  default:
+    etype = ET_TASK;
+    break;
+  }
+
+  if (ink_atomic_increment(static_cast<int *>(&i->m_event_count), eventProcessor.thread_group[etype]._count) < 0) {
+    ink_assert(!"not reached");
+  }
+
+  auto events = eventProcessor.schedule_entire(i, 0, HRTIME_MSECONDS(every), etype, EVENT_INTERVAL);
+
+  std::vector<TSAction> actions;
+  for (auto &event : events) {
+    /* This is a hack. Should be handled in ink_types */
+    actions.push_back((TSAction)((uintptr_t) reinterpret_cast<TSAction>(event) | 0x1));
+  }
+  return actions;
 }
 
 TSReturnCode
