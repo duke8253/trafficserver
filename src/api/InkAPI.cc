@@ -4266,15 +4266,7 @@ tsapi::c::TSContScheduleOnEntirePool(TSCont contp, TSHRTime timeout, TSThreadPoo
     ink_assert(!"not reached");
   }
 
-  auto events =
-    eventProcessor.schedule_entire(i, HRTIME_MSECONDS(timeout), 0, etype, timeout == 0 ? EVENT_IMMEDIATE : EVENT_INTERVAL);
-
-  std::vector<TSAction> actions;
-  for (auto &event : events) {
-    /* This is a hack. Should be handled in ink_types */
-    actions.push_back((TSAction)((uintptr_t) reinterpret_cast<TSAction>(event) | 0x1));
-  }
-  return actions;
+  return eventProcessor.schedule_entire(i, HRTIME_MSECONDS(timeout), 0, etype, timeout == 0 ? EVENT_IMMEDIATE : EVENT_INTERVAL);
 }
 
 tsapi::c::TSAction
@@ -4384,14 +4376,7 @@ tsapi::c::TSContScheduleEveryOnEntirePool(TSCont contp, TSHRTime every, TSThread
     ink_assert(!"not reached");
   }
 
-  auto events = eventProcessor.schedule_entire(i, 0, HRTIME_MSECONDS(every), etype, EVENT_INTERVAL);
-
-  std::vector<TSAction> actions;
-  for (auto &event : events) {
-    /* This is a hack. Should be handled in ink_types */
-    actions.push_back((TSAction)((uintptr_t) reinterpret_cast<TSAction>(event) | 0x1));
-  }
-  return actions;
+  return eventProcessor.schedule_entire(i, 0, HRTIME_MSECONDS(every), etype, EVENT_INTERVAL);
 }
 
 TSReturnCode

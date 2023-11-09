@@ -201,13 +201,13 @@ EventProcessor::schedule_every(Continuation *cont, ink_hrtime t, EventType et, i
   }
 }
 
-TS_INLINE std::vector<Event *>
+TS_INLINE std::vector<TSAction>
 EventProcessor::schedule_entire(Continuation *cont, ink_hrtime t, ink_hrtime p, EventType et, int callback_event, void *cookie)
 {
   ThreadGroupDescriptor *tg = &thread_group[et];
   EThread *curr_thread      = this_ethread();
 
-  std::vector<Event *> events;
+  std::vector<TSAction> actions;
 
   for (int i = 0; i < tg->_count; i++) {
     Event *e = eventAllocator.alloc();
@@ -238,8 +238,9 @@ EventProcessor::schedule_entire(Continuation *cont, ink_hrtime t, ink_hrtime p, 
       e->ethread->EventQueueExternal.enqueue(e);
     }
 
-    events.push_back(e);
+    /* This is a hack. Should be handled in ink_types */
+    actions.push_back((TSAction)((uintptr_t) reinterpret_cast<TSAction>(e) | 0x1));
   }
 
-  return events;
+  return actions;
 }

@@ -219,8 +219,8 @@ public:
   Event *schedule_every(Continuation *c, ink_hrtime aperiod, EventType event_type = ET_CALL, int callback_event = EVENT_INTERVAL,
                         void *cookie = nullptr);
 
-  std::vector<Event *> schedule_entire(Continuation *c, ink_hrtime atimeout, ink_hrtime aperiod, EventType event_type = ET_CALL,
-                                       int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
+  std::vector<TSAction> schedule_entire(Continuation *c, ink_hrtime atimeout, ink_hrtime aperiod, EventType event_type = ET_CALL,
+                                        int callback_event = EVENT_IMMEDIATE, void *cookie = nullptr);
 
   ////////////////////////////////////////////
   // reschedule an already scheduled event. //
