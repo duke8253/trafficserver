@@ -83,12 +83,12 @@ Scenario 1 (no thread affinity info, different types of threads)
 ----------------------------------------------------------------
 
 When thread affinity is not set, a plugin calls the API on thread "A" (which is an ``ET_TASK`` type), and
-wants to schedule on an ``ET_NET`` type thread provided in "tp", the system would see there is no thread
+wants to schedule on an ``ET_NET`` type thread provided in :arg:`tp`, the system would see there is no thread
 affinity information stored in "contp."
 
 In this situation, system sees there is no thread affinity information stored in :arg:`contp`. It then
-checks whether the type of thread "A" is the same as provided in "tp", and sees that "A" is ``ET_TASK``,
-but "tp" says ``ET_NET``. So :arg:`contp` gets scheduled on the next available ``ET_NET`` thread provided by a
+checks whether the type of thread "A" is the same as provided in :arg:`tp`, and sees that "A" is ``ET_TASK``,
+but :arg:`tp` says ``ET_NET``. So :arg:`contp` gets scheduled on the next available ``ET_NET`` thread provided by a
 round robin list, which we will call thread "B". Since :arg:`contp` doesn't have thread affinity information,
 thread "B" will be assigned as the affinity thread for it automatically.
 
@@ -100,7 +100,7 @@ Scenario 2 (no thread affinity info, same types of threads)
 -----------------------------------------------------------
 
 Slight variation of scenario 1, instead of scheduling on a ``ET_NET`` thread, the plugin wants to schedule
-on a ``ET_TASK`` thread (i.e. "tp" contains ``ET_TASK`` now), all other conditions stays the same.
+on a ``ET_TASK`` thread (i.e. :arg:`tp` contains ``ET_TASK`` now), all other conditions stays the same.
 
 This time since the type of the desired thread for scheduling and thread "A" are the same, the system
 schedules :arg:`contp` on thread "A", and assigns thread "A" as the affinity thread for :arg:`contp`.
@@ -117,7 +117,7 @@ Scenario 3 (has thread affinity info, different types of threads)
 Slight variation of scenario 1, thread affinity is set for continuation :arg:`contp` to thread "A", all other
 conditions stays the same.
 
-In this situation, the system sees that the "tp" has ``ET_NET``, but the type of thread "A" is ``ET_TASK``.
+In this situation, the system sees that the :arg:`tp` has ``ET_NET``, but the type of thread "A" is ``ET_TASK``.
 So even though :arg:`contp` has an affinity thread, the system will not use that information since the type is
 different, instead it schedules :arg:`contp` on the next available ``ET_NET`` thread provided by a round robin
 list, which we will call thread "B". The difference with scenario 1 is that since thread "A" is set to
@@ -131,9 +131,9 @@ types and thread pointers.
 Scenario 4 (has thread affinity info, same types of threads)
 ------------------------------------------------------------
 
-Slight variation of scenario 3, the only difference is "tp" now says ``ET_TASK``.
+Slight variation of scenario 3, the only difference is :arg:`tp` now says ``ET_TASK``.
 
-This is the easiest scenario since the type of thread "A" and "tp" are the same, so the system schedules
+This is the easiest scenario since the type of thread "A" and :arg:`tp` are the same, so the system schedules
 :arg:`contp` on thread "A". And, as discussed, there is really no reason why one may want to schedule
 the same continuation on two different threads of the same type.
 
