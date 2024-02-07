@@ -76,6 +76,7 @@ enum HTTPStatus {
   HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE        = 415,
   HTTP_STATUS_RANGE_NOT_SATISFIABLE         = 416,
   HTTP_STATUS_TOO_EARLY                     = 425,
+  HTTP_STATUS_TOO_MANY_REQUESTS             = 429,
 
   HTTP_STATUS_INTERNAL_SERVER_ERROR = 500,
   HTTP_STATUS_NOT_IMPLEMENTED       = 501,
@@ -887,14 +888,14 @@ is_header_keep_alive(const HTTPVersion &http_version, const MIMEField *con_hdr)
       con_token = CON_TOKEN_CLOSE;
   }
 
-  if (HTTP_1_0 == http_version) {
+  if (http_version == HTTP_1_0) {
     keep_alive = (con_token == CON_TOKEN_KEEP_ALIVE) ? (HTTP_KEEPALIVE) : (HTTP_NO_KEEPALIVE);
-  } else if (HTTP_1_1 == http_version) {
+  } else if (http_version >= HTTP_1_1) {
     // We deviate from the spec here.  If the we got a response where
     //   where there is no Connection header and the request 1.0 was
     //   1.0 don't treat this as keep-alive since Netscape-Enterprise/3.6 SP1
     //   server doesn't
-    keep_alive = ((con_token == CON_TOKEN_KEEP_ALIVE) || (con_token == CON_TOKEN_NONE && HTTP_1_1 == http_version)) ?
+    keep_alive = ((con_token == CON_TOKEN_KEEP_ALIVE) || (con_token == CON_TOKEN_NONE)) ?
                    (HTTP_KEEPALIVE) :
                    (HTTP_NO_KEEPALIVE);
   } else {

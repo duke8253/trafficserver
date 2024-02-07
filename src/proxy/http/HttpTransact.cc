@@ -6900,6 +6900,8 @@ HttpTransact::handle_response_keep_alive_headers(State *s, HTTPVersion ver, HTTP
     // some systems hang until the connection closes when receiving a 204 regardless of the K-A headers
     // close if there is any body response from the origin
     ka_action = KA_CLOSE;
+  } else if (heads->status_get() == HTTP_STATUS_TOO_MANY_REQUESTS) {
+    ka_action = KA_CLOSE;
   } else {
     // Determine if we are going to send either a server-generated or
     // proxy-generated chunked response to the client. If we cannot

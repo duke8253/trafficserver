@@ -191,16 +191,22 @@ Http2ClientSession::main_event_handler(int event, void *edata)
     break;
 
   case VC_EVENT_ACTIVE_TIMEOUT:
-  case VC_EVENT_INACTIVITY_TIMEOUT:
+  case VC_EVENT_INACTIVITY_TIMEOUT: {
+    if (this->connection_state.get_shutdown_state() == HTTP2_SHUTDOWN_NONE) {
+      this->connection_state.set_shutdown_state(HTTP2_SHUTDOWN_INITIATED, Http2ErrorCode::HTTP2_ERROR_NO_ERROR);
+      send_connection_event(&this->connection_state, HTTP2_SESSION_EVENT_SHUTDOWN_CONT, this);
+    }
+    [[fallthrough]];
+  }
   case VC_EVENT_ERROR:
-  case VC_EVENT_EOS:
+  case VC_EVENT_EOS: {
     Http2SsnDebug("Closing event: %s", HttpDebugNames::get_event_name(event));
     this->set_dying_event(event);
     this->do_io_close();
     retval     = 0;
     set_closed = true;
     break;
-
+  }
   case VC_EVENT_WRITE_READY:
   case VC_EVENT_WRITE_COMPLETE:
     this->connection_state.restart_streams();
