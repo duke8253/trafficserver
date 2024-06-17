@@ -3062,6 +3062,7 @@ TSReturnCode TSHttpTxnCacheLookupCountGet(TSHttpTxn txnp, int *lookup_count);
 TSReturnCode TSHttpTxnServerRespIgnore(TSHttpTxn txnp);
 TSReturnCode TSHttpTxnShutDown(TSHttpTxn txnp, TSEvent event);
 TSReturnCode TSHttpTxnCloseAfterResponse(TSHttpTxn txnp, int should_close);
+TSReturnCode TSHttp2GraceShutdown(TSHttpTxn txnp);
 
 int          TSHttpTxnClientReqIsServerStyle(TSHttpTxn txnp);
 TSReturnCode TSHttpTxnUpdateCachedObject(TSHttpTxn txnp);

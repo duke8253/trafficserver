@@ -1472,6 +1472,23 @@ Http2ConnectionState::rcv_frame(const Http2Frame *frame)
   }
 }
 
+void
+Http2ConnectionState::_finish_grace_shutdown()
+{
+  shutdown_cont_event = nullptr;
+  shutdown_state      = HTTP2_SHUTDOWN_IN_PROGRESS;
+  // [RFC 7540] 6.8.  GOAWAY
+  // ..., the server can send another GOAWAY frame with an updated last stream identifier
+  if (shutdown_reason == Http2ErrorCode::HTTP2_ERROR_MAX) {
+    shutdown_reason = Http2ErrorCode::HTTP2_ERROR_NO_ERROR;
+  }
+  send_goaway_frame(latest_streamid_in, shutdown_reason);
+
+  // Stop creating new streams
+  SCOPED_MUTEX_LOCK(lock, this->session->get_mutex(), this_ethread());
+  this->session->set_half_close_local_flag(true);
+}
+
 int
 Http2ConnectionState::main_event_handler(int event, void *edata)
 {
@@ -1497,6 +1514,14 @@ Http2ConnectionState::main_event_handler(int event, void *edata)
 
     ink_assert(this->fini_received == false);
     this->fini_received = true;
+
+    if (shutdown_state == HTTP2_SHUTDOWN_INITIATED) {
+      if (shutdown_cont_event) {
+        shutdown_cont_event->cancel();
+      }
+      this->_finish_grace_shutdown();
+    }
+
     cleanup_streams();
     release_stream();
     SET_HANDLER(&Http2ConnectionState::state_closed);
@@ -1556,17 +1581,7 @@ Http2ConnectionState::main_event_handler(int event, void *edata)
   case HTTP2_SESSION_EVENT_SHUTDOWN_CONT: {
     REMEMBER(event, this->recursion);
     ink_assert(shutdown_state == HTTP2_SHUTDOWN_INITIATED);
-    shutdown_cont_event = nullptr;
-    shutdown_state      = HTTP2_SHUTDOWN_IN_PROGRESS;
-    // [RFC 7540] 6.8.  GOAWAY
-    // ..., the server can send another GOAWAY frame with an updated last stream identifier
-    if (shutdown_reason == Http2ErrorCode::HTTP2_ERROR_MAX) {
-      shutdown_reason = Http2ErrorCode::HTTP2_ERROR_NO_ERROR;
-    }
-    send_goaway_frame(latest_streamid_in, shutdown_reason);
-    // Stop creating new streams
-    SCOPED_MUTEX_LOCK(lock, this->session->get_mutex(), this_ethread());
-    this->session->set_half_close_local_flag(true);
+    this->_finish_grace_shutdown();
   } break;
 
   default:

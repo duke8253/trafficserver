@@ -7755,6 +7755,19 @@ TSHttpTxnCloseAfterResponse(TSHttpTxn txnp, int should_close)
   return TS_SUCCESS;
 }
 
+TSReturnCode
+TSHttp2GraceShutdown(TSHttpTxn txnp)
+{
+  if (sdk_sanity_check_txn(txnp) != TS_SUCCESS) {
+    return TS_ERROR;
+  }
+
+  HttpSM *sm                        = (HttpSM *)txnp;
+  sm->t_state.api_h2_grace_shutdown = true;
+
+  return TS_SUCCESS;
+}
+
 // Parse a port descriptor for the proxy.config.http.server_ports descriptor format.
 TSPortDescriptor
 TSPortDescriptorParse(const char *descriptor)
